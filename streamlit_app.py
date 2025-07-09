@@ -88,7 +88,7 @@ def predict_drowsiness(left_eye, right_eye, mouth):
         yawn_score = res[2]
         comb_score = 0.7 * eye_avg + 0.3 * yawn_score
 
-        status = "Drowsy" if comb_score > drowsy_thresh else "Alert"
+        status = "Alert" if comb_score > drowsy_thresh else "Drowsy"
         return comb_score, status
     else:
         return None, "Detection Failed"
@@ -118,7 +118,6 @@ if input_source is not None:
         score, status = predict_drowsiness(left_eye, right_eye, mouth)
 
         if score is not None:
-            score = score if status == "Drowsy" else 1 - score
             st.success(f"Prediction: **{status}** (Confidence: {score:.2f})")
         else:
             st.error("Could not detect face or landmarks.")
