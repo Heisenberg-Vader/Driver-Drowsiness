@@ -1,7 +1,7 @@
 streamlit
-opencv-python
+opencv-python-headless
 tensorflow
 keras
 numpy
 Pillow
-dlib
+dlib-bin
