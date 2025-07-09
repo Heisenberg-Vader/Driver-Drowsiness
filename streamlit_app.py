@@ -19,7 +19,7 @@ def load_models():
     return eye_model, yawn_model
 
 eye_model, yawn_model = load_models()
-    
+
 eye_thresh = 0.5
 yawn_thresh = 0.9
 drowsy_thresh = 0.6
@@ -113,7 +113,7 @@ if input_source is not None:
     img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
 
     with st.spinner("Processing image..."):
-        left_eye, right_eye, mouth = segment_eyes_and_mouth(img_bgr)
+        left_eye, right_eye, mouth = segment_eyes_and_mouth(img_bgr, 50)
         score, status = predict_drowsiness(left_eye, right_eye, mouth)
 
         if score is not None:
