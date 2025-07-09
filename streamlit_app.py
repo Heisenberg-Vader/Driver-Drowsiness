@@ -88,7 +88,7 @@ def predict_drowsiness(left_eye, right_eye, mouth):
         yawn_score = res[2]
         comb_score = 0.7 * eye_avg + 0.3 * yawn_score
 
-        status = "Alert" if comb_score > drowsy_thresh else "Drowsy"
+        status = "Drowsy" if comb_score > drowsy_thresh else "Alert"
         return comb_score, status
     else:
         return None, "Detection Failed"
