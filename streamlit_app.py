@@ -118,7 +118,7 @@ if input_source is not None:
         score, status = predict_drowsiness(left_eye, right_eye, mouth)
 
         if score is not None:
-            st.success(f"Prediction: **{status}** (Confidence: {score:.2f})")
+            st.success(f"Prediction: **{status}** (Confidence: {score:.2f if 'Alert' else 1-score:.2f})")
         else:
             st.error("Could not detect face or landmarks.")
 
