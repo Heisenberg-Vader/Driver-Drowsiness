@@ -83,6 +83,7 @@ def predict_drowsiness(left_eye, right_eye, mouth):
         res.append(mouth_pred)
 
     if len(res) == 3:
+        print(res)
         eye_avg = 0.5 * (res[0] + res[1])
         yawn_score = res[2]
         comb_score = 0.7 * eye_avg + 0.3 * yawn_score
