@@ -19,7 +19,7 @@ def load_models():
     return eye_model, yawn_model
 
 eye_model, yawn_model = load_models()
-
+    
 eye_thresh = 0.5
 yawn_thresh = 0.9
 drowsy_thresh = 0.6
