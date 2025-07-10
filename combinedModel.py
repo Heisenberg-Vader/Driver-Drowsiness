@@ -40,12 +40,13 @@ def segment_eyes_and_mouth(img, pad=150):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY) 
     faces = det(gray)
 
-    for face in faces:
-        landmarks = pred(gray, face)
+    if len(faces) == 0:
+        print("No faces detected.")
         
-        crop_feature(img, landmarks, [36, 37, 38, 39, 40, 41], max(pad-50, 0), label="left_eye")
-        crop_feature(img, landmarks, [42, 43, 44, 45, 46, 47], max(pad-50, 0), label="right_eye")
-        crop_feature(img, landmarks, list(range(48, 60)), pad, label="mouth")
+    landmarks = pred(gray, faces[0])    
+    crop_feature(img, landmarks, [36, 37, 38, 39, 40, 41], max(pad-50, 0), label="left_eye")
+    crop_feature(img, landmarks, [42, 43, 44, 45, 46, 47], max(pad-50, 0), label="right_eye")
+    crop_feature(img, landmarks, list(range(48, 60)), max(pad-40, 0), label="mouth")
    
 def load_and_normalize_img(path):
     im = cv2.imread(path, cv2.IMREAD_COLOR)
@@ -82,28 +83,11 @@ def combine_model_predict(input_im):
                 norm_im = np.expand_dims(norm_im, axis=0)
                 eye_pred = eye_model.predict(norm_im)
                 
-                if feature == 'left_eye':
-                    if eye_pred[0][0] > eye_thresh:
-                        print(f"Left Eye Prediction: Open with confidence {eye_pred[0][0]:.2f}")
-                    else:
-                        print(f"Left Eye Prediction: Closed with confidence {1 - eye_pred[0][0]:.2f}")
-                
-                elif feature == 'right_eye':
-                    if eye_pred[0][0] > eye_thresh:
-                        print(f"Right Eye Prediction: Open with confidence {eye_pred[0][0]:.2f}")
-                    else:
-                        print(f"Right Eye Prediction: Closed with confidence {1 - eye_pred[0][0]:.2f}")
-                        
                 res.append(eye_pred[0][0])
                     
             elif feature == 'mouth':
                 norm_im = np.expand_dims(norm_im, axis=0)
                 yawn_pred = yawn_model.predict(norm_im)
-                
-                if yawn_pred[0][0] > yawn_thresh:
-                    print(f"Mouth Prediction: Yawning with confidence {yawn_pred[0][0]:.2f}")
-                else:
-                    print(f"Mouth Prediction: Not Yawning with confidence {1 - yawn_pred[0][0]:.2f}")
                     
                 res.append(yawn_pred[0][0])
                 
@@ -120,11 +104,41 @@ def combine_model_predict(input_im):
         comb_pred = 0.7 * eye_pred_combined + 0.3 * yawn_pred_ # 0.7 weight for eye prediction, 0.3 for yawn prediction
         
         print(f"[SCAN RESULT] Status: {'Alert' if comb_pred > drowsy_thresh else 'Drowsy'} with confidence {comb_pred:.2f}")
+        return 'Alert' if comb_pred > drowsy_thresh else 'Drowsy', comb_pred
+        
+    else:
+        print("Failed to get predictions for all features.")
+        return "Detection Failed", 0.0
     
-im = cv2.imread('t1.jpg')    
+cam = cv2.VideoCapture(0)
 
-if im is None:
-    raise ValueError("Image not found or could not be read.")
+if not cam.isOpened():
+    raise ValueError("Could not open webcam. Please check your camera settings.")
 
-segment_eyes_and_mouth(im)
-combine_model_predict(im)
+while True:
+    ret, frame = cam.read()
+    if not ret:
+        print("Failed to capture image from webcam.")
+        break
+    
+    cv2.imshow('Webcam Feed', frame)
+    
+    key = cv2.waitKey(1)
+    
+    if key % 256 == 27 or key % 256 == ord('q'):
+        print('Closing webcam feed.')
+        break
+    
+    if key % 256 == 32:
+        im = frame   
+
+        if im is None:
+            raise ValueError("Image not found or could not be read.")
+
+        segment_eyes_and_mouth(im, 70)
+        status, pred = combine_model_predict(im)
+
+        print(f"Final Prediction: {status} with confidence {pred:.2f}")
+
+cam.release()
+cv2.destroyAllWindows()
