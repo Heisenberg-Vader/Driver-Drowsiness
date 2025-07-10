@@ -241,7 +241,7 @@ if webcam_img is not None:
     with col1:
         if st.button("Retake"):
             st.session_state.confirmed_image = None
-            st.experimental_rerun()
+            st.rerun()
 
     with col2:
         if st.button("Continue"):
