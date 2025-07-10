@@ -41,7 +41,7 @@ def segment_eyes_and_mouth(img, pad=150):
     landmarks = pred(gray, faces[0])
     left_eye = crop_feature(img, landmarks, [36, 37, 38, 39, 40, 41], max(pad-50, 0))
     right_eye = crop_feature(img, landmarks, [42, 43, 44, 45, 46, 47], max(pad-50, 0))
-    mouth = crop_feature(img, landmarks, list(range(48, 60)), pad)
+    mouth = crop_feature(img, landmarks, list(range(48, 60)), max(pad-40, 0))
     return left_eye, right_eye, mouth
 
 def normalize_image(im, feature):
