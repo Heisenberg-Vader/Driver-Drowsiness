@@ -201,7 +201,7 @@ def predict_drowsiness(left_eye, right_eye, mouth):
         left_eye_pred = eye_model.predict(left_eye_norm, verbose=0)
         res.append(left_eye_pred[0][0])
     else:
-        res.append(1.0)  # fallback
+        res.append(1.0)
 
     if right_eye_norm is not None:
         right_eye_pred = eye_model.predict(right_eye_norm, verbose=0)
@@ -211,7 +211,7 @@ def predict_drowsiness(left_eye, right_eye, mouth):
 
     if mouth_norm is not None:
         mouth_pred = yawn_model.predict(mouth_norm, verbose=0)
-        res.append(mouth_pred[0][0])
+        res.append(1 - mouth_pred[0][0])
     else:
         res.append(0.0)
 
