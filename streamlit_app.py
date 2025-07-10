@@ -222,18 +222,40 @@ def predict_drowsiness(left_eye, right_eye, mouth):
     status = "Alert" if comb_pred > drowsy_thresh else "Drowsy"
     return comb_pred, status, res
 
-# Streamlit UI
+############################
+####    Streamlit UI    ####
+############################
 st.title("🚨 Drowsiness Detection")
 st.write("Upload a photo or use your webcam to check if you're alert or drowsy.")
 
-img_input = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
-webcam_img = st.camera_input("Or take a live photo")
+img_input = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"], key="upload_image")
+webcam_img = st.camera_input("Or take a live photo", key="camera_image")
 
-input_source = webcam_img if webcam_img else img_input
+if "confirmed_image" not in st.session_state:
+    st.session_state.confirmed_image = None
 
-if input_source:
-    img = cv2.cvtColor(np.array(Image.open(input_source)), cv2.COLOR_RGB2BGR)
-    st.image(img, caption="Input Frame")
+if webcam_img is not None:
+    st.image(webcam_img, caption="Captured Photo (Webcam)", use_column_width=True)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Retake"):
+            st.session_state.confirmed_image = None
+            st.experimental_rerun()
+
+    with col2:
+        if st.button("Continue"):
+            st.session_state.confirmed_image = webcam_img
+
+elif img_input is not None:
+    st.image(img_input, caption="Uploaded Image", use_column_width=True)
+    
+    if st.button("Confirm Upload"):
+        st.session_state.confirmed_image = img_input
+
+if st.session_state.confirmed_image:
+    img = cv2.cvtColor(np.array(Image.open(st.session_state.confirmed_image)), cv2.COLOR_RGB2BGR)
+    st.image(img, caption="Final Image Used for Prediction", use_column_width=True)
 
     with st.spinner("Detecting drowsiness..."):
         left_eye, right_eye, mouth = segment_eyes_and_mouth(img, pad=70)
@@ -245,7 +267,6 @@ if input_source:
 
             st.success(f"### {status.upper()} (Confidence: {score:.2f})")
             st.write(f"🔵 Left Eye: {raw[0]:.2f} | 🔵 Right Eye: {raw[1]:.2f} | 🔴 Yawn: {raw[2]:.2f}")
-
             st.image(left_eye, caption="Left Eye")
             st.image(right_eye, caption="Right Eye")
             st.image(mouth, caption="Mouth")
