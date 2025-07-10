@@ -7,11 +7,9 @@ import os
 import dlib
 from PIL import Image
 
-# Load Dlib predictor & models
 pred = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 det = dlib.get_frontal_face_detector()
 
-# Load ML models
 @st.cache_resource
 def load_models():
     eye_model = keras.models.load_model('eye_classifier_model.keras')
@@ -71,25 +69,25 @@ def predict_drowsiness(left_eye, right_eye, mouth):
     mouth_norm = normalize_image(mouth, 'mouth')
 
     if left_eye_norm is not None:
-        left_eye_pred = eye_model.predict(left_eye_norm)[0][0]
-        res.append(left_eye_pred)
+        left_eye_pred = eye_model.predict(left_eye_norm)
+        res.append(left_eye_pred[0][0])
 
     if right_eye_norm is not None:
-        right_eye_pred = eye_model.predict(right_eye_norm)[0][0]
-        res.append(right_eye_pred)
+        right_eye_pred = eye_model.predict(right_eye_norm)
+        res.append(right_eye_pred[0][0])
 
     if mouth_norm is not None:
-        mouth_pred = yawn_model.predict(mouth_norm)[0][0]
-        res.append(mouth_pred)
+        mouth_pred = yawn_model.predict(mouth_norm)
+        res.append(mouth_pred[0][0])
 
     if len(res) == 3:
         print(res)
-        eye_avg = 0.5 * (res[0] + res[1])
-        yawn_score = res[2]
-        comb_score = 0.7 * eye_avg + 0.3 * yawn_score
+        eye_pred = 0.5 * (res[0] + res[1])
+        yawn_pred = res[2]
+        comb_pred = 0.7 * eye_pred + 0.3 * yawn_pred
 
-        status = "Alert" if comb_score > drowsy_thresh else "Drowsy"
-        return comb_score, status
+        status = "Alert" if comb_pred > drowsy_thresh else "Drowsy"
+        return comb_pred, status
     else:
         return None, "Detection Failed"
 
@@ -109,12 +107,10 @@ elif img_input is not None:
     input_source = img_input
 
 if input_source is not None:
-    image = Image.open(input_source)
-    img_np = np.array(image)
-    img_bgr = cv2.cvtColor(img_np, cv2.COLOR_RGB2BGR)
+    img = cv2.cvtColor(np.array(Image.open(input_source)), cv2.COLOR_RGB2BGR)
 
     with st.spinner("Processing image..."):
-        left_eye, right_eye, mouth = segment_eyes_and_mouth(img_bgr, 50)
+        left_eye, right_eye, mouth = segment_eyes_and_mouth(img, 50)
         score, status = predict_drowsiness(left_eye, right_eye, mouth)
 
         if score is not None:
@@ -122,7 +118,6 @@ if input_source is not None:
         else:
             st.error("Could not detect face or landmarks.")
 
-    # Show segmented regions
     if left_eye is not None:
         st.image(left_eye, caption="Left Eye")
     if right_eye is not None:
