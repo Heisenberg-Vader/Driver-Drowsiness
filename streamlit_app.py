@@ -235,7 +235,7 @@ if "confirmed_image" not in st.session_state:
     st.session_state.confirmed_image = None
 
 if webcam_img is not None:
-    st.image(webcam_img, caption="Captured Photo (Webcam)", use_column_width=True)
+    st.image(webcam_img, caption="Captured Photo (Webcam)", use_container_width=True)
 
     col1, col2 = st.columns(2)
     with col1:
@@ -248,14 +248,14 @@ if webcam_img is not None:
             st.session_state.confirmed_image = webcam_img
 
 elif img_input is not None:
-    st.image(img_input, caption="Uploaded Image", use_column_width=True)
+    st.image(img_input, caption="Uploaded Image", use_container_width=True)
     
     if st.button("Confirm Upload"):
         st.session_state.confirmed_image = img_input
 
 if st.session_state.confirmed_image:
     img = cv2.cvtColor(np.array(Image.open(st.session_state.confirmed_image)), cv2.COLOR_RGB2BGR)
-    st.image(img, caption="Final Image Used for Prediction", use_column_width=True)
+    st.image(img, caption="Final Image Used for Prediction", use_container_width=True)
 
     with st.spinner("Detecting drowsiness..."):
         left_eye, right_eye, mouth = segment_eyes_and_mouth(img, pad=70)
