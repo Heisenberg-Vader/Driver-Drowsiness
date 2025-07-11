@@ -8,6 +8,7 @@ from keras import layers, models
 import os
 import dlib
 from matplotlib import pyplot as plt
+import time
 
 pred = dlib.shape_predictor('shape_predictor_68_face_landmarks.dat')
 det = dlib.get_frontal_face_detector()
@@ -42,11 +43,14 @@ def segment_eyes_and_mouth(img, pad=150):
 
     if len(faces) == 0:
         print("No faces detected.")
+        return False
         
     landmarks = pred(gray, faces[0])    
     crop_feature(img, landmarks, [36, 37, 38, 39, 40, 41], max(pad-50, 0), label="left_eye")
     crop_feature(img, landmarks, [42, 43, 44, 45, 46, 47], max(pad-50, 0), label="right_eye")
     crop_feature(img, landmarks, list(range(48, 60)), max(pad-40, 0), label="mouth")
+    
+    return True
    
 def load_and_normalize_img(path):
     im = cv2.imread(path, cv2.IMREAD_COLOR)
@@ -115,13 +119,29 @@ cam = cv2.VideoCapture(0)
 if not cam.isOpened():
     raise ValueError("Could not open webcam. Please check your camera settings.")
 
+last_cap_time = time.time()
+cap_interval = 5
+status_text = "Initializing..."
+conf = 0.0
+
 while True:
     ret, frame = cam.read()
     if not ret:
         print("Failed to capture image from webcam.")
         break
     
-    cv2.imshow('Webcam Feed', frame)
+    display_frame = frame.copy()
+    
+    cur_time = time.time()
+    elapsed = cur_time - last_cap_time
+    rem_time = max(0, cap_interval - elapsed)
+    
+    cv2.putText(display_frame, f"Status: {status_text} ({conf:.2f})", 
+                (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+    cv2.putText(display_frame, f"Next capture in: {int(rem_time)} seconds", 
+                (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+    
+    cv2.imshow('Drowsiness Detection', display_frame)
     
     key = cv2.waitKey(1)
     
@@ -129,16 +149,24 @@ while True:
         print('Closing webcam feed.')
         break
     
-    if key % 256 == 32:
-        im = frame   
+    if key % 256 == 32 or (elapsed >= cap_interval):
+        print("\n--- Capturing and processing frame ---")
+        im = frame.copy()
 
         if im is None:
             raise ValueError("Image not found or could not be read.")
 
-        segment_eyes_and_mouth(im, 70)
-        status, pred = combine_model_predict(im)
+        status = segment_eyes_and_mouth(im, 70)
+        if not status:
+            print("No face detected or failed to segment features.")
+            cv2.putText(display_frame, f"Face not found!", 
+                        (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+            continue
+        status_text, conf = combine_model_predict(im)
 
-        print(f"Final Prediction: {status} with confidence {pred:.2f}")
+        print(f"Final Prediction: {status_text} with confidence {conf:.2f}\n")
+        
+        last_cap_time = time.time()
 
 cam.release()
 cv2.destroyAllWindows()
