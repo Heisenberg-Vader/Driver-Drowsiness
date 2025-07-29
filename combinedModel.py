@@ -5,6 +5,7 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from keras import layers, models
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay, roc_curve, auc
 import os
 import dlib
 from matplotlib import pyplot as plt
@@ -114,13 +115,13 @@ def combine_model_predict(input_im):
         print("Failed to get predictions for all features.")
         return "Detection Failed", 0.0
     
-cam = cv2.VideoCapture(0)
+cam = cv2.VideoCapture('test.mp4')
 
 if not cam.isOpened():
     raise ValueError("Could not open webcam. Please check your camera settings.")
 
 last_cap_time = time.time()
-cap_interval = 5
+cap_interval = 1
 status_text = "Initializing..."
 conf = 0.0
 
@@ -134,7 +135,7 @@ while True:
     
     cur_time = time.time()
     elapsed = cur_time - last_cap_time
-    rem_time = max(0, cap_interval - elapsed)
+    rem_time = max(0, cap_interval - elapsed)   
     
     cv2.putText(display_frame, f"Status: {status_text} ({conf:.2f})", 
                 (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
@@ -170,3 +171,81 @@ while True:
 
 cam.release()
 cv2.destroyAllWindows()
+
+#############################################
+# FOR TESTING PURPOSES ON INDIVIDUAL FRAMES #
+#############################################
+
+# pred_labels = []
+# gt_labels = []
+# conf_scores = []
+
+# base_dir = 'sampled_frames'
+# categories = ['drowsy', 'notdrowsy']
+
+# for category in categories:
+#     label = 'Drowsy' if category == 'drowsy' else 'Alert'
+#     folder = os.path.join(base_dir, category)
+
+#     for fname in os.listdir(folder):
+#         path = os.path.join(folder, fname)
+#         img = cv2.imread(path)
+
+#         if img is None:
+#             print(f"[WARNING] Could not load {path}")
+#             continue
+
+#         gt_labels.append(1 if label == 'Drowsy' else 0) 
+
+#         if segment_eyes_and_mouth(img):
+#             prd, conf = combine_model_predict(img)
+#             pred_labels.append(1 if prd == 'Drowsy' else 0)
+#             conf_scores.append(conf)
+#         else:
+#             prd = 'Unknown'
+#             pred_labels.append(0)
+#             conf_scores.append(0)
+
+    
+# gt_cln, pred_cln = [], []
+# for gt, prd in zip(gt_labels, pred_labels):
+#     if prd != 'Unknown':
+#         gt_cln.append(gt)
+#         pred_cln.append(prd)
+        
+# cm = confusion_matrix(gt_cln, pred_cln, labels=[0, 1])
+# disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Alert', 'Drowsy'])
+# disp.plot()
+# plt.show()
+
+# TP = cm[0, 0] 
+# TN = cm[1, 1]
+# FN = cm[0, 1]
+# FP = cm[1, 0]
+
+# accuracy = (TP + TN) / cm.sum()
+# precision = TP / (TP + FP) if (TP + FP) > 0 else 0
+# recall = TP / (TP + FN) if (TP + FN) > 0 else 0
+# f1 = 2 * (precision * recall) / (precision + recall) if (precision + recall) > 0 else 0
+# specificity = TN / (TN + FP) if (TN + FP) > 0 else 0
+
+# print(f"Accuracy: {accuracy:.2f}")
+# print(f"Precision: {precision:.2f}")
+# print(f"Recall: {recall:.2f}")
+# print(f"F1-Score: {f1:.2f}")
+# print(f"Specificity: {specificity:.2f}")
+
+# fpr, tpr, thresholds = roc_curve(gt_labels, conf_scores)
+# roc_auc = auc(fpr, tpr)
+
+# plt.figure()
+# plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
+# plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+# plt.xlim([-0.01, 1.01])
+# plt.ylim([-0.01, 1.01])
+# plt.xlabel('False Positive Rate')
+# plt.ylabel('True Positive Rate')
+# plt.title('Receiver Operating Characteristic (ROC) – Drowsiness Detection')
+# plt.legend(loc="lower right")
+# plt.grid(True)
+# plt.show()

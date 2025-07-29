@@ -3,3 +3,7 @@
 *.zip
 *.db
 extractTest.py
+extractFrames.py
+sampled_frames
+*.MOV
+*.mp4
