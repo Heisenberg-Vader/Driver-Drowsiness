@@ -18,7 +18,10 @@ A real-time drowsiness detection prototype that uses your device camera (laptop/
 
 - **Frontend:** Streamlit + HTML + JS Webcam Interface
 - **Backend:** Python 
-- **Models:** (Not available in this REPO)
+- **Models:**
   - `eye_classifier_model.keras`
   - `yawn_detection_model.keras`
 ---
+
+## Multiple Implementations
+- The `combinedModel.py` code has various different implementation that can be used for testing, real applications that best fits the use case of the user.
