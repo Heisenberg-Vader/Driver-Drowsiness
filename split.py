@@ -23,6 +23,6 @@ def split_dataset(base_dir, output_dir, train_ratio=0.75):
             shutil.copy(os.path.join(src_dir, img), os.path.join(output_dir, 'test', cat, img))
             
 split_dataset(
-    base_dir='C:\\Users\\Hussain Haidary\\OneDrive - LNMIIT\\MyPC\\Documents\\Coding\\Python\\SleepDetection\\dataset_B_Eye_Images',
-    output_dir='C:\\Users\\Hussain Haidary\\OneDrive - LNMIIT\\MyPC\\Documents\\Coding\\Python\\SleepDetection\\dataset_B_Eye_Images_split'
+    base_dir='<YOUR-DIRECTORY>',
+    output_dir='<YOUR_DIRECTORY>'
 )
